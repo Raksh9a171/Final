@@ -1,0 +1,53 @@
+# Import required libraries
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+
+# Step 1: Load the dataset
+file_path = "customer_churn.csv"  # Update this to your file path
+data = pd.read_csv(file_path)
+
+# Step 2: Data Preprocessing
+# Drop unnecessary columns
+data = data.drop(['customerID'], axis=1)
+
+# Convert 'TotalCharges' to numeric
+data['TotalCharges'] = pd.to_numeric(data['TotalCharges'], errors='coerce')
+
+# Handle missing values in 'TotalCharges'
+data['TotalCharges'] = data['TotalCharges'].fillna(data['TotalCharges'].median())
+
+# Encode categorical variables
+data = pd.get_dummies(data, drop_first=True)
+
+# Check for imbalance in target variable
+print("\nClass Distribution in Target Variable:")
+print(data['Churn_Yes'].value_counts())
+
+# Step 3: Splitting the dataset
+X = data.drop('Churn_Yes', axis=1)
+y = data['Churn_Yes']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+
+# Step 4: Model Training
+model = LogisticRegression(max_iter=1000)
+model.fit(X_train, y_train)
+
+# Step 5: Predictions and Evaluation
+y_pred = model.predict(X_test)
+
+# Evaluation Metrics
+print("\nAccuracy:", accuracy_score(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred, zero_division=1))
+
+# Confusion Matrix
+conf_matrix = confusion_matrix(y_test, y_pred)
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues')
+plt.title("Confusion Matrix")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.show()
